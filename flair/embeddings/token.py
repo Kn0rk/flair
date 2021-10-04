@@ -1094,7 +1094,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                             all_embeddings: List[torch.FloatTensor] = [
                                 embedding.unsqueeze(0) for embedding in current_embeddings
                             ]
-                            final_embedding: torch.Tensor = torch.max(torch.cat(all_embeddings, dim=0), dim=0)
+                            final_embedding: torch.Tensor = torch.max(torch.cat(all_embeddings, dim=0), dim=0).values
 
                         subtoken_embeddings.append(final_embedding)
 
@@ -1104,7 +1104,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                         subtoken_embeddings = [sm_embeddings]
 
                     if self.layer_mean in ["max"] and len(self.layer_indexes) > 1:
-                        sm_embeddings = torch.max(torch.stack(subtoken_embeddings, dim=1), dim=1)
+                        sm_embeddings = torch.max(torch.stack(subtoken_embeddings, dim=1), dim=1).values
                         subtoken_embeddings = [sm_embeddings]
 
                     # set the extracted embedding for the token
