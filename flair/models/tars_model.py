@@ -335,7 +335,7 @@ class TARSTagger(FewshotClassifier):
             embeddings = TransformerWordEmbeddings(model=embeddings,
                                                    fine_tune=True,
                                                    layers='-1',
-                                                   layer_mean=False,
+                                                   layer_mean="con",
                                                    )
 
         # prepare TARS dictionary

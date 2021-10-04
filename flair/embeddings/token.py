@@ -801,7 +801,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             model: str = "bert-base-uncased",
             layers: str = "all",
             subtoken_pooling: str = "first",
-            layer_mean: bool = True,
+            layer_mean: str = "mean", # mean, con, max
             fine_tune: bool = False,
             allow_long_sentences: bool = True,
             use_context: Union[bool, int] = False,
@@ -1090,11 +1090,21 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                             ]
                             final_embedding: torch.Tensor = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
 
+                        if self.pooling_operation == "max":
+                            all_embeddings: List[torch.FloatTensor] = [
+                                embedding.unsqueeze(0) for embedding in current_embeddings
+                            ]
+                            final_embedding: torch.Tensor = torch.max(torch.cat(all_embeddings, dim=0), dim=0)
+
                         subtoken_embeddings.append(final_embedding)
 
                     # use layer mean of embeddings if so selected
-                    if self.layer_mean and len(self.layer_indexes) > 1:
+                    if self.layer_mean in ["mean"] and len(self.layer_indexes) > 1:
                         sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
+                        subtoken_embeddings = [sm_embeddings]
+
+                    if self.layer_mean in ["max"] and len(self.layer_indexes) > 1:
+                        sm_embeddings = torch.max(torch.stack(subtoken_embeddings, dim=1), dim=1)
                         subtoken_embeddings = [sm_embeddings]
 
                     # set the extracted embedding for the token
@@ -1241,7 +1251,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             return self.embedding_length_internal
 
         # """Returns the length of the embedding vector."""
-        if not self.layer_mean:
+        if not self.layer_mean in ["mean","max"]:
             length = len(self.layer_indexes) * self.model.config.hidden_size
         else:
             length = self.model.config.hidden_size
